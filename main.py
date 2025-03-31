@@ -160,6 +160,25 @@ def train(args, params):
                     torch.save(save, f='./weights/best.pt')
                 del save
 
+            # Self-supervised learning: update training set with predicted bounding boxes
+            if args.self_supervised and epoch >= 10 and epoch % 5 == 0:
+                model.eval()
+                for i, (samples, targets) in enumerate(loader):
+                    samples = samples.cuda().float() / 255
+                    with torch.no_grad():
+                        outputs = model(samples)
+                    for j, output in enumerate(outputs):
+                        idx = targets['idx'] == j
+                        cls = targets['cls'][idx]
+                        box = targets['box'][idx]
+                        cls = cls.cuda()
+                        box = box.cuda()
+                        for k in range(output.shape[0]):
+                            if output[k, 4] > args.conf_threshold:
+                                new_box = output[k, :4].cpu().numpy()
+                                new_cls = output[k, 5].cpu().numpy()
+                                loader.dataset.add_bbox(new_box, new_cls)
+
     if args.local_rank == 0:
         util.strip_optimizer('./weights/best.pt')  # strip optimizers
         util.strip_optimizer('./weights/last.pt')  # strip optimizers
@@ -265,6 +284,8 @@ def main():
     parser.add_argument('--epochs', default=600, type=int)
     parser.add_argument('--train', action='store_true')
     parser.add_argument('--test', action='store_true')
+    parser.add_argument('--self-supervised', action='store_true', help='Enable self-supervised learning')
+    parser.add_argument('--conf-threshold', default=0.5, type=float, help='Confidence threshold for self-supervised learning')
 
     args = parser.parse_args()
 
