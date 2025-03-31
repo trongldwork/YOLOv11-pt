@@ -14,12 +14,12 @@ pip install tqdm
 ### Train
 
 * Configure your dataset path in `main.py` for training
-* Run `bash main.sh $ --train` for training, `$` is number of GPUs
+* Run `bash main.sh $ --train --train-dir <path_to_train_dir> --val-dir <path_to_val_dir> --test-dir <path_to_test_dir>` for training, `$` is number of GPUs
 
 ### Test
 
 * Configure your dataset path in `main.py` for testing
-* Run `python main.py --test` for testing
+* Run `python main.py --test --train-dir <path_to_train_dir> --val-dir <path_to_val_dir> --test-dir <path_to_test_dir>` for testing
 
 ### Results
 
