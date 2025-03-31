@@ -34,10 +34,10 @@ def train(args, params):
     ema = util.EMA(model) if args.local_rank == 0 else None
 
     filenames = []
-    with open(f'{data_dir}/train2017.txt') as f:
+    with open(f'{args.train_dir}/train2017.txt') as f:
         for filename in f.readlines():
             filename = os.path.basename(filename.rstrip())
-            filenames.append(f'{data_dir}/images/train2017/' + filename)
+            filenames.append(f'{args.train_dir}/images/train2017/' + filename)
 
     sampler = None
     dataset = Dataset(filenames, args.input_size, params, augment=True)
@@ -168,10 +168,10 @@ def train(args, params):
 @torch.no_grad()
 def test(args, params, model=None):
     filenames = []
-    with open(f'{data_dir}/val2017.txt') as f:
+    with open(f'{args.val_dir}/val2017.txt') as f:
         for filename in f.readlines():
             filename = os.path.basename(filename.rstrip())
-            filenames.append(f'{data_dir}/images/val2017/' + filename)
+            filenames.append(f'{args.val_dir}/images/val2017/' + filename)
 
     dataset = Dataset(filenames, args.input_size, params, augment=False)
     loader = data.DataLoader(dataset, batch_size=4, shuffle=False, num_workers=4,
@@ -265,6 +265,9 @@ def main():
     parser.add_argument('--epochs', default=600, type=int)
     parser.add_argument('--train', action='store_true')
     parser.add_argument('--test', action='store_true')
+    parser.add_argument('--train-dir', default='../Dataset/COCO', type=str)
+    parser.add_argument('--val-dir', default='../Dataset/COCO', type=str)
+    parser.add_argument('--test-dir', default='../Dataset/COCO', type=str)
 
     args = parser.parse_args()
 
