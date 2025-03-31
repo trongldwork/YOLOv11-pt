@@ -27,6 +27,9 @@ class Dataset(data.Dataset):
         # Albumentations (optional, only used if package is installed)
         self.albumentations = Albumentations()
 
+        # New bounding boxes to be added to the training set
+        self.new_bboxes = []
+
     def __getitem__(self, index):
         index = self.indices[index]
 
@@ -86,6 +89,15 @@ class Dataset(data.Dataset):
         # Convert HWC to CHW, BGR to RGB
         sample = image.transpose((2, 0, 1))[::-1]
         sample = numpy.ascontiguousarray(sample)
+
+        # Add new bounding boxes to the training set
+        if self.new_bboxes:
+            for new_box, new_cls in self.new_bboxes:
+                new_box = torch.tensor(new_box)
+                new_cls = torch.tensor(new_cls).unsqueeze(0)
+                target_box = torch.cat((target_box, new_box.unsqueeze(0)), dim=0)
+                target_cls = torch.cat((target_cls, new_cls.unsqueeze(0)), dim=0)
+            self.new_bboxes = []
 
         return torch.from_numpy(sample), target_cls, target_box, torch.zeros(nl)
 
@@ -234,6 +246,9 @@ class Dataset(data.Dataset):
             x[filename] = label
         torch.save(x, path)
         return x
+
+    def add_bbox(self, new_box, new_cls):
+        self.new_bboxes.append((new_box, new_cls))
 
 
 def wh2xy(x, w=640, h=640, pad_w=0, pad_h=0):
